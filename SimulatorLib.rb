@@ -12,6 +12,94 @@ class MnM
 	end
 end
 
+class Status
+	STATUSES=
+	{
+		:none =>
+		{:degree => 0, :modifies => nil}, 
+
+		# limited to free actions and a single standard action per turn
+		:dazed =>
+		{:degree => 1, :modifies => nil}, 
+
+		# take no action, any threat ends entranced
+		:entranced=>
+		{:degree => 1, :modifies => nil}, 
+		
+		# hindered
+		:fatigued =>
+		{:degree => 1, :modifies => nil}, 
+		
+		# speed - 1 (half speed)
+		:hindered =>
+		{:degree => 1, :modifies => nil}, 
+		
+		# X - 2
+		:impaired =>
+		{:degree => 1, :modifies => nil},
+		
+		# defense.value/2 [RU]
+		:vulnerable =>
+		{:degree => 1, :modifies => nil},
+		
+		# action chosen by controller, limited to free actions and a single standard action per turn
+		:compelled =>
+		{:degree => 2, :modifies => nil},
+		
+		# defense.value = 0
+		:defenseless =>
+		{:degree => 2, :modifies => nil},
+		
+		# X - 5
+		:disabled =>
+		{:degree => 2, :modifies => nil},
+		
+		# impaired (all) and hindered
+		:exhausted =>
+		{:degree => 2, :modifies => nil},
+		
+		# cannot move from location
+		:immobile =>
+		{:degree => 2, :modifies => nil},
+		
+		# hindered, +5 close attack.bonus, -5 ranged attack.bonus 
+		:prone =>
+		{:degree => 2, :modifies => nil},
+		
+		# no actions
+		:stunned =>
+		{:degree => 2, :modifies => nil},
+		
+		# defenseless, stunned, unaware. perception degree 3 removes, sudden movement removes
+		:asleep =>
+		{:degree => 3, :modifies => nil}, 
+		
+		# full actions chosen by controller
+		:controlled =>
+		{:degree => 3, :modifies => nil}, 
+		
+		# defenseless, stunned, unaware, prone
+		:incapacitated =>
+		{:degree => 3, :modifies => nil}, 
+		
+		# defenseless, immobile, and physically stunned, can take mental actions
+		:paralyzed =>
+		{:degree => 3, :modifies => nil}, 
+		
+		# becomes something else
+		:transformed =>
+		{:degree => 3, :modifies => nil}, 
+		
+		# unaware of surroundings and unable ot act on it
+		:unaware =>
+		{:degree => 3, :modifies => nil},
+		
+		# dazed and hindered
+		:staggered =>
+		{:degree => 2, :modifies => nil}
+	}
+end
+
 class Attack
 	attr_accessor :bonus
 	attr_accessor :rank
@@ -23,6 +111,7 @@ class Attack
 	attr_accessor :is_status_recovery
 	attr_accessor :is_progressive
 	attr_accessor :is_multiattack
+	attr_accessor :statuses
 
 	def self.defaults_damage
 		{
@@ -35,7 +124,8 @@ class Attack
 		:cumulative_statuses => [2],
 		:is_status_recovery => false,
 		:is_progressive => false,
-		:is_multiattack => false
+		:is_multiattack => false,
+		:statuses=>[:dazed,:staggered,:incapacitated]
 		}
 	end
 
@@ -50,7 +140,8 @@ class Attack
 		:cumulative_statuses => [],
 		:is_status_recovery => true,
 		:is_progressive => false,
-		:is_multiattack => false
+		:is_multiattack => false,
+		:statuses=>[:dazed,:staggered,:incapacitated]
 		}
 	end
 
@@ -65,18 +156,18 @@ class Attack
 	    Attack::defaults_damage.merge(args).each {|k,v| send("#{k}=",v)}
 	end
 
-	def roll_attack(defense_class)
+	def roll_attack(value)
 		damage_impervious = @rank
 		damage = @rank
 
-		return {:degree=>1, :damage=>damage, :damage_impervious=>damage_impervious} if @is_perception_attack
+		return {:degree => 1, :damage=>damage, :damage_impervious=>damage_impervious} if @is_perception_attack
 
 		hit_roll = MnM.roll_d20
 
 		# roll of 1 automatically misses
 		return {:degree=>-1, :damage=>0, :damage_impervious=>0} if hit_roll == 1
 
-		hit_degree = MnM.degree(defense_class+10, hit_roll + @bonus)
+		hit_degree = MnM.degree(value+10, hit_roll + @bonus)
 
 		# crit if you hit and got the min_crit or better
 		is_crit = (hit_degree > 0 and hit_roll >= @min_crit)
@@ -103,13 +194,13 @@ class Attack
 end
 
 class Defense
-	attr_accessor :defense_class
+	attr_accessor :value
 	attr_accessor :save
 	attr_accessor :impervious # any attack difficulty less is ignored
 
 	def self.defaults
 		{
-		:defense_class => 10,
+		:value => 10,
 		:save => 10,
 		:impervious => nil
     	}
@@ -145,7 +236,7 @@ class Character
 
 	def init_combat
 		@stress = 0
-		@status = 0
+		set_status(:none)
 		@initiative = MnM.roll_d20(@initiative_bonus)
 	end
 
@@ -155,10 +246,7 @@ class Character
 		# bail if attack or defense is nil
 		return if attack == nil or defense == nil
 
-		#puts("#{@name} attacks #{target.name}")
-
-		result = attack.roll_attack(defense.defense_class)
-		#puts("Hit Roll Degrees: #{result[:degree]} Damage: #{result[:damage]}")
+		result = attack.roll_attack(defense.value)
 
 		# apply the damage if needed
 		if result[:degree] > 0 then
@@ -184,44 +272,70 @@ class Character
 			degree = degree < 1 ? 1 : degree + 1
 		end
 
-		status = degree > 0 ? nil : degree.abs
-		#puts("Resistance Roll: #{save_roll} Total: #{resistance} Degree: #{degree} Status: #{status}")
 
 		# if stress is caused, it is for a status effect of -1 and higher (equivalent to save of rank+15)
 		@stress += 1 if attack.is_cause_stress and degree <= 1
 
-		update_status(attack, status) if status != nil
-
-		#puts("#{@name} Stress: #{@stress} Status: #{@status}")
+		status_degree = degree > 0 ? nil : degree.abs
+		update_status(status_degree, attack)
 	end
 
-	def update_status(attack, status)
-		return if status < 1 # no status inflicted
+	def update_status(status_degree, attack)
+		return if status_degree == nil or status_degree < 1
 		
 		# if status greater than current, becomes new status
-		if status > @status then
-			@status = status
+		if status_degree > @status[:degree]
+			set_status(status_degree, attack)
+		# if cumulative, then status degree bumped up one
+		elsif attack.cumulative_statuses.include?(status_degree) then
+			set_status(@status[:degree]+1, attack)
+		end
+	end
+
+	def set_status(sv, attack=nil)
+		return if sv == nil
+
+		if sv.is_a? Symbol then
+			@status = Status::STATUSES[sv]
+		elsif sv.is_a? Fixnum and sv < 1 then
+			@status = Status::STATUSES[:none]
+		elsif attack != nil and sv.is_a? Fixnum then
+			s = attack.statuses[([sv, attack.statuses.length].min)-1]
+			@status = Status::STATUSES[s]
 		else
-			#puts("BUMP CUMULATIVE")
-			# increate status if cumulative
-			@status += 1 if attack.cumulative_statuses.include?(status)
+			puts sv.class.name
+			puts sv.to_yaml
+			puts attack.to_yaml
+
+			throw "BAD STATUS"
+		end
+		if @status == nil or @status[:degree] == nil then
+			puts sv.class.name
+			puts "sv = #{sv}"
+			puts attack.to_yaml
+			throw "BAD STATUS"
 		end
 	end
 
 	def end_round_recovery(attack)
-		# bail if no recovery check needed; 
-		return if attack == nil or !attack.is_status_recovery or @defense == nil or @status > 2 or @status < 1
+		# bail if no recovery check needed: no attack, no recovery
+		return if attack == nil or !attack.is_status_recovery or @defense == nil
+		
+		status_degree = @status[:degree]
+		# bail if nothing to recover or if you can't recover (status too high)
+		return if status_degree < 1 or status_degree > 2
+		
 
 		resistance = MnM.degree(attack.rank + 10, @defense.save + MnM.roll_d20)
 		# if resistance sucessful, lower the status by one
 		if resistance > 0
-			#puts("SUCCESSFUL RESISTANCE")
-			@status -= 1
+			status_degree -= 1
 		# if failed and progressive, increase status by one
 		elsif attack.is_progressive
-			#puts("FAILED PROGRESSIVE")
-			@status += 1
+			status_degree += 1
 		end
+
+		set_status(status_degree, attack)
 	end
 end
 
@@ -296,7 +410,7 @@ class CombatSimulator
 	end
 
 	def combat_finished?
-		@character1.status > 2 or @character2.status > 2
+		@character1.status[:degree] > 2 or @character2.status[:degree] > 2
 	end
 
 	def run_round
