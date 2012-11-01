@@ -30,7 +30,7 @@ class Status
 	    {:degree => 0, :modifiers => nil, :recovery => false}.merge(args).each {|k,v| send("#{k}=",v)}
 	end
 
-	STATUSES_ARRAY=
+	STATUSES=
 	[
 		{:status => :none, :degree => 0, :modifiers => nil, :recovery => false}, 
 		{:status => :generic1, :degree => 1, :modifiers => nil, :recovery => false}, 
@@ -77,9 +77,7 @@ class Status
 		{:status => :transformed, :degree => 3, :modifiers => nil, :recovery => false}, # becomes something else
 		# UNAWARE:
 		{:status => :unaware, :degree => 3, :modifiers => nil, :recovery => false}, # unaware of surroundings and unable to act on it
-	]
-
-	STATUSES=STATUSES_ARRAY.inject({}) {|h, e| h[e[:status]]=e; h }
+	].inject({}) {|h, e| h[e[:status]]=e; h }
 
 
 end
