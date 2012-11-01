@@ -6,7 +6,7 @@ attacker = Character.new(
 	:name => "Atacker",
 	:attack => nil,
 	:defense => nil,
-	:initiative_bonus => 0
+	:initiative => 0
 })
 
 defender = Character.new(
@@ -14,7 +14,7 @@ defender = Character.new(
 	:name => "Defender",
 	:attack => nil,
 	:defense => Defense.new,
-	:initiative_bonus => 0
+	:initiative => 0
 })
 
 puts "=========="

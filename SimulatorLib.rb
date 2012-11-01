@@ -13,91 +13,75 @@ class MnM
 end
 
 class Status
-	STATUSES=
-	{
-		:none =>
-		{:degree => 0, :modifies => nil}, 
+	attr_accessor :status
+	attr_accessor :degree
+	# array of modifiers in form of one of the following
+	# nil => no modifiers this program can express currently
+	# [symbolN,modifierN] => an array of any number of symbols or modifiers
+	# symbol is another status
+	# mofifier is an array to modify some value
+	# 	[property, lambda]
+	# 	[:attack, property, lambda]
+	# 	[:defense, property, lambda]
+	attr_accessor :modifiers
+	attr_accessor :recovery # if automatically recovered, actual recovery varies but this is simplified for sim
 
-		# limited to free actions and a single standard action per turn
-		:dazed =>
-		{:degree => 1, :modifies => nil}, 
+	def initialize(args={})
+	    {:degree => 0, :modifiers => nil, :recovery => false}.merge(args).each {|k,v| send("#{k}=",v)}
+	end
 
-		# take no action, any threat ends entranced
-		:entranced=>
-		{:degree => 1, :modifies => nil}, 
-		
-		# hindered
-		:fatigued =>
-		{:degree => 1, :modifies => nil}, 
-		
-		# speed - 1 (half speed)
-		:hindered =>
-		{:degree => 1, :modifies => nil}, 
-		
-		# X - 2
-		:impaired =>
-		{:degree => 1, :modifies => nil},
-		
-		# defense.value/2 [RU]
-		:vulnerable =>
-		{:degree => 1, :modifies => nil},
-		
-		# action chosen by controller, limited to free actions and a single standard action per turn
-		:compelled =>
-		{:degree => 2, :modifies => nil},
-		
-		# defense.value = 0
-		:defenseless =>
-		{:degree => 2, :modifies => nil},
-		
-		# X - 5
-		:disabled =>
-		{:degree => 2, :modifies => nil},
-		
-		# impaired (all) and hindered
-		:exhausted =>
-		{:degree => 2, :modifies => nil},
-		
-		# cannot move from location
-		:immobile =>
-		{:degree => 2, :modifies => nil},
-		
-		# hindered, +5 close attack.bonus, -5 ranged attack.bonus 
-		:prone =>
-		{:degree => 2, :modifies => nil},
-		
-		# no actions
-		:stunned =>
-		{:degree => 2, :modifies => nil},
-		
-		# defenseless, stunned, unaware. perception degree 3 removes, sudden movement removes
-		:asleep =>
-		{:degree => 3, :modifies => nil}, 
-		
-		# full actions chosen by controller
-		:controlled =>
-		{:degree => 3, :modifies => nil}, 
-		
-		# defenseless, stunned, unaware, prone
-		:incapacitated =>
-		{:degree => 3, :modifies => nil}, 
-		
-		# defenseless, immobile, and physically stunned, can take mental actions
-		:paralyzed =>
-		{:degree => 3, :modifies => nil}, 
-		
-		# becomes something else
-		:transformed =>
-		{:degree => 3, :modifies => nil}, 
-		
-		# unaware of surroundings and unable ot act on it
-		:unaware =>
-		{:degree => 3, :modifies => nil},
-		
-		# dazed and hindered
-		:staggered =>
-		{:degree => 2, :modifies => nil}
-	}
+	STATUSES_ARRAY=
+	[
+		{:status => :none, :degree => 0, :modifiers => nil, :recovery => false}, 
+		{:status => :generic1, :degree => 1, :modifiers => nil, :recovery => false}, 
+		{:status => :generic2, :degree => 2, :modifiers => nil, :recovery => false}, 
+		{:status => :generic3, :degree => 3, :modifiers => nil, :recovery => false}, 
+
+		# DAZED: limited to free actions and a single standard action per turn
+		{:status => :dazed, :degree => 1, :modifiers => :nil, :recovery => false}, 
+		# ENTRANCED: take no action, any threat ends entranced
+		{:status => :entranced, :degree => 1, :modifiers => nil, :recovery => true}, # [:is_act, lambda{|x|false}]
+		# FATIGUED: hindered
+		{:status => :fatigued, :degree => 1, :modifiers => [:hindered], :recovery => false}, 
+		# HINDERED: speed - 1 (half speed)
+		{:status => :hindered, :degree => 1, :modifiers => nil, :recovery => false}, #[[:speed, lambda{|x| x - 1}]] 
+		# IMPAIRED: X - 2 #could impare any value choosing save for sim
+		{:status => :impaired, :degree => 1, :modifiers => [[:defense, :save, lambda{|x| x - 2}]], :recovery => false}, 
+		# VULNERABLE: defense.value/2 [RU]
+		{:status => :vulnerable, :degree => 1, :modifiers => [[:defense, :value, lambda{|x| (x.to_f/2).ceil}]], :recovery => false},
+		# COMPELLED: action chosen by controller, limited to free actions and a single standard action per turn
+		{:status => :compelled, :degree => 2, :modifiers => nil, :recovery => false}, # [:is_act, lambda{|x|false}]
+		# DEFENSELESS: defense = 0
+		{:status => :defenseless, :degree => 2, :modifiers =>  [[:defense, :value, lambda{|x|0}]], :recovery => false},
+		# DISABLED: X - 5 # could disable any value, choosing save for sim
+		{:status => :disabled, :degree => 2, :modifiers =>  [[:defense, :save, lambda{|x| x - 5}]], :recovery => false},
+		# EXHAUSTED:
+		{:status => :exhausted, :degree => 2, :modifiers => [[:all, lambda{|x| x - 2}], :hindered], :recovery => false},
+		# IMMOBLE:
+		{:status => :immobile, :degree => 2, :modifiers =>  nil, :recovery => false}, #[[:speed, lambda{|x| nil}]]
+		# PRONE:
+		{:status => :prone, :degree => 2, :modifiers => [:hindered, [:defense, :value, lambda{|x| x - 5}]], :recovery => false}, # really gives close attacks +5 and ranged -5 but for purposes of the sim the status effect was worst case
+		# STUNNED:
+		{:status => :stunned, :degree => 2, :modifiers => nil, :recovery => false}, #[:is_act, lambda{|x|false}]
+		# STAGGERED:
+		{:status => :staggered, :degree => 2, :modifiers => [:dazed, :hindered], :recovery => false},
+		# ASLEEP:
+		{:status => :asleep, :degree => 3, :modifiers => [:defenseless, :stunned, :unaware], :recovery => false}, #perception degree 3 removes, sudden movement removes
+		# CONTROLLED: full actions chosen by controller
+		{:status => :controlled, :degree => 3, :modifiers => nil, :recovery => false},
+		# INCAPICITATED:
+		{:status => :incapacitated, :degree => 3, :modifiers => [:defenseless, :stunned, :unaware, :prone], :recovery => false}, 
+		# PARALYZED: Physically immobile but can take purely mental actions
+		{:status => :paralyzed, :degree => 3, :modifiers => [:defenseless, :immobile, :stunned], :recovery => false}, # can take mental actions
+		# TRANSFORMED: 
+		{:status => :transformed, :degree => 3, :modifiers => nil, :recovery => false}, # becomes something else
+		# UNAWARE:
+		{:status => :unaware, :degree => 3, :modifiers => nil, :recovery => false}, # unaware of surroundings and unable to act on it
+	]
+
+	STATUSES=STATUSES_ARRAY.inject({}) {|h, e| h[e[:status]]=e; h }
+
+
 end
 
 class Attack
@@ -215,8 +199,8 @@ class Character
 	attr_accessor :name
 	attr_accessor :attack
 	attr_accessor :defense
-	attr_accessor :initiative_bonus
-	attr_reader :initiative
+	attr_accessor :initiative
+	attr_reader :initiative_value
 	attr_reader :status
 	attr_reader :stress # stress is equivalent to the "cumulative -1 to resistance"
 
@@ -225,7 +209,7 @@ class Character
     	:name => "Character",
 		:attack => nil,
 		:defense => nil,
-		:initiative_bonus => 0
+		:initiative => 0
 	    }
 	end
 
@@ -237,7 +221,7 @@ class Character
 	def init_combat
 		@stress = 0
 		set_status(:none)
-		@initiative = MnM.roll_d20(@initiative_bonus)
+		@initiative_value = MnM.roll_d20(@initiative)
 	end
 
 	def attack_target(target)
@@ -395,7 +379,7 @@ class CombatSimulator
 	    @character1.init_combat
 	    @character2.init_combat
 	    @init_order = [character1,character2]
-	    @init_order.sort! { |a, b|  a.initiative <=> b.initiative }
+	    @init_order.sort! { |a, b|  a.initiative_value <=> b.initiative_value }
 	end
 
 	def run_combat
