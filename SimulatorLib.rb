@@ -363,7 +363,7 @@ class CombatSimulator
 
 	def self.defaults
 		{
-		:iterations => 300000,
+		:iterations => 10000,#300000,
 		:character1 => Character.new({:attack => Attack.new, :defense => nil}),
 		:character2 => Character.new({:attack => nil, :defense => Defense.new})
 		}
