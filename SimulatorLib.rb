@@ -12,6 +12,35 @@ class MnM
 	end
 end
 
+module Enumerable
+	def statistics
+		result = {}
+
+		result[:min] = self.min
+		result[:max] = self.max
+		
+		total = self.inject{|sum,x| sum + x }
+		mean = total.to_f / self.length
+		result[:mean] = mean
+		
+		sorted = self.sort
+		result[:median] = self.length % 2 == 1 ? sorted[self.length/2] : (sorted[self.length/2 - 1] + sorted[self.length/2]).to_f / 2
+	
+		sv = self.inject(0){|accum, i| accum + (i - mean) ** 2 }
+		variance = sv / (self.length - 1).to_f
+		result[:variance] = variance
+		result[:standard_deviation] =  Math.sqrt(variance)
+
+		result
+	end
+
+	STATS_ORDER = [:min, :max, :mean, :median, :variance, :standard_deviation]
+
+	def format_stats
+		STATS_ORDER.inject("") {|s, e| s += "#{(e.to_s+":").ljust(20)} #{self[e]}\n" }
+	end
+end
+
 class Status
 	attr_accessor :status
 	attr_accessor :degree
@@ -351,24 +380,7 @@ class CombatSimulator
 			run_combat
 		end
 
-		len = @num_rounds.length
-
-		rounds_analysis = {}
-		rounds_analysis[:rounds_min] = @num_rounds.min
-		rounds_analysis[:rounds_max] = @num_rounds.max
-		total = @num_rounds.inject{|sum,x| sum + x }
-		mean = total.to_f / len
-		rounds_analysis[:rounds_mean] = mean
-		
-		sorted = @num_rounds.sort
-		rounds_analysis[:rounds_median] = len % 2 == 1 ? sorted[len/2] : (sorted[len/2 - 1] + sorted[len/2]).to_f / 2
-	
-		sv = @num_rounds.inject(0){|accum, i| accum + (i - mean) ** 2 }
-		variance = sv / (len - 1).to_f
-		rounds_analysis[:rounds_variance] = variance
-		rounds_analysis[:rounds_standard_deviation] =  Math.sqrt(variance)
-
-		rounds_analysis
+		@num_rounds.statistics
 	end
 
 	def init_run

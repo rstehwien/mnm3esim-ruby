@@ -23,7 +23,7 @@ attacker.attack = Attack::create_damage
 puts CombatSimulator.new({ 
 	:character1 => attacker, 
 	:character2 => defender
-	}).run.to_yaml
+	}).run.format_stats
 puts "=========="
 
 
@@ -33,7 +33,7 @@ attacker.attack = Attack::create_affliction
 puts CombatSimulator.new({ 
 	:character1 => attacker, 
 	:character2 => defender
-	}).run.to_yaml
+	}).run.format_stats
 puts "=========="
 
 puts "=========="
@@ -42,7 +42,7 @@ attacker.attack = Attack::create_affliction({:cumulative_statuses=>[1,2]})
 puts CombatSimulator.new({ 
 	:character1 => attacker, 
 	:character2 => defender
-	}).run.to_yaml
+	}).run.format_stats
 puts "=========="
 
 puts "=========="
@@ -51,7 +51,7 @@ attacker.attack = Attack::create_affliction({:is_progressive=>true})
 puts CombatSimulator.new({ 
 	:character1 => attacker, 
 	:character2 => defender
-	}).run.to_yaml
+	}).run.format_stats
 puts "=========="
 
 puts "=========="
@@ -64,6 +64,6 @@ attacker.attack = Attack::create_affliction(
 puts CombatSimulator.new({ 
 	:character1 => attacker, 
 	:character2 => defender
-	}).run.to_yaml
+	}).run.format_stats
 puts "=========="
 
