@@ -258,19 +258,22 @@ class Character
 		# if stress is caused, it is for a status effect of -1 and higher (equivalent to save of rank+15)
 		@stress += 1 if attack.is_cause_stress and degree <= 1
 
-		status_degree = degree > 0 ? nil : degree.abs
+		status_degree = degree > 0 ? nil : [degree.abs, attack.statuses.length].min
 		update_status(status_degree, attack)
 	end
 
-	def update_status(status_degree, attack)
-		return if status_degree == nil or status_degree < 1
-		
-		# if status greater than current, becomes new status
-		if status_degree > @status[:degree]
-			set_status(status_degree, attack)
-		# if cumulative, then status degree bumped up one
-		elsif attack.cumulative_statuses.include?(status_degree) then
-			set_status(@status[:degree]+1, attack)
+	def update_status(new_degree, attack)
+		return if new_degree == nil or new_degree < 1
+
+		cur_degree = @status[:degree]
+
+		# cumulative attacks add their degrees
+		# NOTE: damage sets the cumulative degree to [2] which means another staggered will add 2 to the degree, but it works out right
+		if attack.cumulative_statuses.include?(cur_degree) and attack.cumulative_statuses.include?(new_degree) then
+			set_status(cur_degree+new_degree, attack)
+		# non-cumulative only replaces if new degree is better
+		elsif new_degree > cur_degree
+			set_status(new_degree, attack)
 		end
 	end
 
@@ -307,11 +310,10 @@ class Character
 		# bail if nothing to recover or if you can't recover (status too high)
 		return if status_degree < 1 or status_degree > 2
 		
-
 		resistance = MnM.degree(attack.rank + 10, @defense.save + MnM.roll_d20)
 		# if resistance sucessful, lower the status by one
 		if resistance > 0
-			status_degree -= 1
+			status_degree = 0
 		# if failed and progressive, increase status by one
 		elsif attack.is_progressive
 			status_degree += 1
