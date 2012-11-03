@@ -1,5 +1,10 @@
-#!/usr/bin/ruby
-require "./SimulatorLib.rb"
+#!/usr/bin/env ruby
+
+require "rubygems"
+require "bundler/setup"
+
+require 'mnm3esim'
+include MnM3eSim
 
 def run_sim(name, attack)
 	Thread.new {

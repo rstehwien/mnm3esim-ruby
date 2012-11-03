@@ -1,0 +1,14 @@
+PATH
+  remote: .
+  specs:
+    mnm3esim (0.0.1)
+
+GEM
+  remote: https://rubygems.org/
+  specs:
+
+PLATFORMS
+  x86-mingw32
+
+DEPENDENCIES
+  mnm3esim!
