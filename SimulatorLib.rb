@@ -59,7 +59,7 @@ class Status
 	    {:degree => 0, :modifiers => nil, :recovery => false}.merge(args).each {|k,v| send("#{k}=",v)}
 	end
 
-	STATUSES=
+	STATUS_MAP=
 	[
 		{:status => :none, :degree => 0, :modifiers => nil, :recovery => false}, 
 		{:status => :generic1, :degree => 1, :modifiers => nil, :recovery => false}, 
@@ -107,6 +107,7 @@ class Status
 		# UNAWARE:
 		{:status => :unaware, :degree => 3, :modifiers => nil, :recovery => false}, # unaware of surroundings and unable to act on it
 	].inject({}) {|h, e| h[e[:status]]=e; h }
+	STATUSES=STATUS_MAP.inject({}) {|h, (k, v)| h[k]=Status.new(v); h }
 
 
 end
@@ -165,6 +166,10 @@ class Attack
 
 	def initialize(args={})
 	    Attack::defaults_damage.merge(args).each {|k,v| send("#{k}=",v)}
+	end
+
+	def statuses=(value)
+		@statuses = value.inject([]) {|a,v| (v.kind_of? Status) ? a.push(v) : a.push(Status::STATUSES[v]) }
 	end
 
 	def roll_attack(value)
@@ -294,7 +299,7 @@ class Character
 	def update_status(new_degree, attack)
 		return if new_degree == nil or new_degree < 1
 
-		cur_degree = @status[:degree]
+		cur_degree = @status.degree
 
 		# cumulative attacks add their degrees
 		# NOTE: damage sets the cumulative degree to [2] which means another staggered will add 2 to the degree, but it works out right
@@ -314,16 +319,11 @@ class Character
 		elsif sv.is_a? Fixnum and sv < 1 then
 			@status = Status::STATUSES[:none]
 		elsif attack != nil and sv.is_a? Fixnum then
-			s = attack.statuses[([sv, attack.statuses.length].min)-1]
-			@status = Status::STATUSES[s]
+			@status = attack.statuses[([sv, attack.statuses.length].min)-1]
 		else
-			puts sv.class.name
-			puts sv.to_yaml
-			puts attack.to_yaml
-
-			throw "BAD STATUS"
+			@status = nil
 		end
-		if @status == nil or @status[:degree] == nil then
+		if @status == nil then
 			puts sv.class.name
 			puts "sv = #{sv}"
 			puts attack.to_yaml
@@ -335,7 +335,7 @@ class Character
 		# bail if no recovery check needed: no attack, no recovery
 		return if attack == nil or !attack.is_status_recovery or @defense == nil
 		
-		status_degree = @status[:degree]
+		status_degree = @status.degree
 		# bail if nothing to recover or if you can't recover (status too high)
 		return if status_degree < 1 or status_degree > 2
 		
@@ -406,7 +406,7 @@ class CombatSimulator
 	end
 
 	def combat_finished?
-		@character1.status[:degree] > 2 or @character2.status[:degree] > 2
+		@character1.status.degree > 2 or @character2.status.degree > 2
 	end
 
 	def run_round
