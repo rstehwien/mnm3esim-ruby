@@ -1,8 +1,10 @@
 module MnM3eSim
-	class Defense < MnM3eBase
-		attr_accessor :value
-		attr_accessor :save
-		attr_accessor :impervious # any attack difficulty less is ignored
+	class Defense < ModifiableStructData
+		DATA_STRUCT = Struct.new(
+			:value,
+			:save,
+			:impervious # any attack difficulty less is ignored
+		)
 
 		def self.defaults
 			{
@@ -13,7 +15,9 @@ module MnM3eSim
 	    end
 
 		def initialize(args={})
-		    Defense::defaults.merge(args).each {|k,v| send("#{k}=",v)}
+			puts "test"
+			@data = DATA_STRUCT.new
+			super(Defense::defaults.merge(args))
 		end
 	end
 end

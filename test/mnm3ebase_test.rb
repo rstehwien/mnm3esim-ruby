@@ -2,7 +2,7 @@ require 'test_helper'
 require 'mnm3esim'
 include MnM3eSim
 
-class DefaultTest < Test::Unit::TestCase
+class MnM3eBaseTest < Test::Unit::TestCase
 
   def setup
   end

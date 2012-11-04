@@ -1,5 +1,5 @@
 module MnM3eSim
-	class Attack < MnM3eBase
+	class Attack < ModifiableStructData
 		attr_accessor :bonus
 		attr_accessor :rank
 		attr_accessor :penetrating

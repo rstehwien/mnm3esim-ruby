@@ -4,6 +4,7 @@ require 'yaml'
 
 require 'mnm3esim/enumerable.rb'
 require 'mnm3esim/mnm3ebase.rb'
+require 'mnm3esim/modifiable.rb'
 require 'mnm3esim/status.rb'
 require 'mnm3esim/attack.rb'
 require 'mnm3esim/defense.rb'

@@ -1,5 +1,5 @@
 module MnM3eSim
-	class Character < MnM3eBase
+	class Character < ModifiableStructData
 		attr_accessor :name
 		attr_accessor :attack
 		attr_accessor :defense
