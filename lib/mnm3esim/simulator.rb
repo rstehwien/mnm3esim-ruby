@@ -5,8 +5,8 @@ module MnM3eSim
 		attr_accessor :character1
 		attr_accessor :character2
 
-		attr_reader :num_rounds
 		attr_reader :init_order
+		attr_reader :num_rounds
 
 		def self.defaults
 			{
@@ -18,6 +18,8 @@ module MnM3eSim
 
 		def initialize(args={})
 		    CombatSimulator::defaults.merge(args).each {|k,v| send("#{k}=",v)}
+		    @init_order = nil
+		    @num_rounds = nil
 		end
 
 		def run
@@ -35,8 +37,8 @@ module MnM3eSim
 		end
 
 		def init_combat
-		    @character1.init_combat
-		    @character2.init_combat
+		    character1.init_combat
+		    character2.init_combat
 		    @init_order = [character1,character2]
 		    @init_order.sort! { |a, b|  a.initiative_value <=> b.initiative_value }
 		end
@@ -53,7 +55,7 @@ module MnM3eSim
 		end
 
 		def combat_finished?
-			@character1.status.degree > 2 or @character2.status.degree > 2
+			character1.status.degree > 2 or character2.status.degree > 2
 		end
 
 		def run_round

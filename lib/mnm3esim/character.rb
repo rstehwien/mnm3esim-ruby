@@ -4,11 +4,12 @@ module MnM3eSim
 		attr_accessor :attack
 		attr_accessor :defense
 		attr_accessor :initiative
+		attr_accessor :actions # one of :full, :partial, :none
+		attr_accessor :is_controlled
+
 		attr_reader :initiative_value
 		attr_reader :status
 		attr_reader :stress # stress is equivalent to the "cumulative -1 to resistance"
-		attr_accessor :actions # one of :full, :partial, :none
-		attr_accessor :is_controlled
 
 		def self.defaults
 			{
@@ -29,11 +30,10 @@ module MnM3eSim
 		def init_combat
 			@stress = 0
 			set_status(:none)
-			@initiative_value = roll_d20(@initiative)
+			@initiative_value = roll_d20(initiative)
 		end
 
 		def attack_target(target)
-			attack = @attack 			# my attack
 			defense = target.defense 	# targets defense
 			# bail if attack or defense is nil
 			return if attack == nil or defense == nil
@@ -48,8 +48,8 @@ module MnM3eSim
 
 		def apply_damage(attack, damage)
 			# bail if impervious to this attack
-			if @defense.impervious != nil then
-				impervious = @defense.impervious - attack.penetrating
+			if defense.impervious != nil then
+				impervious = defense.impervious - attack.penetrating
 				return if impervious >= damage[:damage_impervious]
 			end
 
@@ -57,7 +57,7 @@ module MnM3eSim
 			# The degree will be the status inflicted
 			# Stress caused if degree <= 1 (equivalent to Damage+15)
 			save_roll = roll_d20
-			resistance = save_roll + @defense.save - @stress
+			resistance = save_roll + defense.save - @stress
 			degree = check_degree(damage + 10, resistance)
 
 			if save_roll == 20 then
@@ -109,13 +109,13 @@ module MnM3eSim
 
 		def end_round_recovery(attack)
 			# bail if no recovery check needed: no attack, no recovery
-			return if attack == nil or !attack.is_status_recovery or @defense == nil
+			return if attack == nil or !attack.is_status_recovery or defense == nil
 			
 			status_degree = @status.degree
 			# bail if nothing to recover or if you can't recover (status too high)
 			return if status_degree < 1 or status_degree > 2
 			
-			resistance = check_degree(attack.rank + 10, @defense.save + roll_d20)
+			resistance = check_degree(attack.rank + 10, defense.save + roll_d20)
 			# if resistance sucessful, lower the status by one
 			if resistance > 0
 				status_degree = 0
