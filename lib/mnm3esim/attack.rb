@@ -60,20 +60,20 @@ module MnM3eSim
 		end
 
 		def roll_attack(value)
-			damage_impervious = @rank
-			damage = @rank
+			damage_impervious = rank
+			damage = rank
 
-			return {:degree => 1, :damage=>damage, :damage_impervious=>damage_impervious} if @is_perception_attack
+			return {:degree => 1, :damage=>damage, :damage_impervious=>damage_impervious} if is_perception_attack
 
 			hit_roll = roll_d20
 
 			# roll of 1 automatically misses
 			return {:degree=>-1, :damage=>0, :damage_impervious=>0} if hit_roll == 1
 
-			hit_degree = check_degree(value+10, hit_roll + @bonus)
+			hit_degree = check_degree(value+10, hit_roll + bonus)
 
 			# crit if you hit and got the min_crit or better
-			is_crit = (hit_degree > 0 and hit_roll >= @min_crit)
+			is_crit = (hit_degree > 0 and hit_roll >= min_crit)
 
 			# guaranteed hit if you rolled a 20
 			hit_degree = 1 if (hit_roll == 20 and hit_degree < 1)
@@ -88,7 +88,7 @@ module MnM3eSim
 			end
 
 			# multi-attack bumps up by 5 or 2 but not penetrating
-			if @is_multiattack and hit_degree > 1 then
+			if is_multiattack and hit_degree > 1 then
 				damage += hit_degree >= 3 ? 5 : 2
 			end
 
