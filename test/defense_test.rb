@@ -12,6 +12,11 @@ class DefenseTest < Test::Unit::TestCase
 
   def test_default
     d = Defense.new
+    Defense.defaults.each {|k,v|
+      if v.is_a? Symbol or v.kind_of? Fixnum or v.kind_of? String then
+        assert_equal(v, d.send(k), "testing #{k}") 
+      end
+    }
     assert_equal(10,d.value)
     assert_equal(10,d.save)
     assert_equal(nil,d.impervious)

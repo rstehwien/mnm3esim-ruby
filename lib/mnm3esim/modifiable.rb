@@ -48,7 +48,7 @@ module MnM3eSim
 				result = run_data_method(meth, *args, &block)
 			end
 
-			if @modifiers.kind_of? Hash and @modifiers.has_key?(meth) and @modifiers[meth].kind_of? Array and !(meth.to_s =~ /$=/) then
+			if !(meth.to_s =~ /=$/) and @modifiers.kind_of? Hash and @modifiers.has_key?(meth) and @modifiers[meth].kind_of? Array then
 				@modifiers[meth].each{|mod| result = mod.call(result)}
 			end
 

@@ -1,15 +1,18 @@
 module MnM3eSim
 	class Attack < ModifiableStructData
-		attr_accessor :bonus
-		attr_accessor :rank
-		attr_accessor :penetrating
-		attr_accessor :is_cause_stress
-		attr_accessor :is_perception_attack
-		attr_accessor :min_crit
-		attr_accessor :cumulative_statuses # array of statuses that cause bump to next.  either [], [2], or [1,2]
-		attr_accessor :is_status_recovery
-		attr_accessor :is_progressive
-		attr_accessor :is_multiattack
+		DATA_STRUCT = Struct.new(
+			:bonus,
+			:rank,
+			:penetrating,
+			:is_cause_stress,
+			:is_perception_attack,
+			:min_crit,
+			:cumulative_statuses, # array of statuses that cause bump to next.  either [], [2], or [1,2]
+			:is_status_recovery,
+			:is_progressive,
+			:is_multiattack
+		)
+
 		attr_accessor :statuses
 
 		def self.defaults_damage
@@ -44,6 +47,10 @@ module MnM3eSim
 			}
 		end
 
+		def self.defaults
+			self.defaults_damage
+		end
+
 		def self.create_damage(args={})
 			Attack.new(Attack::defaults_damage.merge(args))
 		end
@@ -52,7 +59,8 @@ module MnM3eSim
 		end
 
 		def initialize(args={})
-		    Attack::defaults_damage.merge(args).each {|k,v| send("#{k}=",v)}
+			@data = DATA_STRUCT.new
+		    super(Attack::defaults.merge(args))
 		end
 
 		def statuses=(value)
@@ -60,20 +68,20 @@ module MnM3eSim
 		end
 
 		def roll_attack(value)
-			damage_impervious = rank
-			damage = rank
+			damage_impervious = self.rank
+			damage = self.rank
 
-			return {:degree => 1, :damage=>damage, :damage_impervious=>damage_impervious} if is_perception_attack
+			return {:degree => 1, :damage=>damage, :damage_impervious=>damage_impervious} if self.is_perception_attack
 
 			hit_roll = roll_d20
 
 			# roll of 1 automatically misses
 			return {:degree=>-1, :damage=>0, :damage_impervious=>0} if hit_roll == 1
 
-			hit_degree = check_degree(value+10, hit_roll + bonus)
+			hit_degree = check_degree(value+10, hit_roll + self.bonus)
 
 			# crit if you hit and got the min_crit or better
-			is_crit = (hit_degree > 0 and hit_roll >= min_crit)
+			is_crit = (hit_degree > 0 and hit_roll >= self.min_crit)
 
 			# guaranteed hit if you rolled a 20
 			hit_degree = 1 if (hit_roll == 20 and hit_degree < 1)
@@ -88,7 +96,7 @@ module MnM3eSim
 			end
 
 			# multi-attack bumps up by 5 or 2 but not penetrating
-			if is_multiattack and hit_degree > 1 then
+			if self.is_multiattack and hit_degree > 1 then
 				damage += hit_degree >= 3 ? 5 : 2
 			end
 

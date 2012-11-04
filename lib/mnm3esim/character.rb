@@ -1,15 +1,16 @@
 module MnM3eSim
 	class Character < ModifiableStructData
-		attr_accessor :name
-		attr_accessor :attack
-		attr_accessor :defense
-		attr_accessor :initiative
-		attr_accessor :actions # one of :full, :partial, :none
-		attr_accessor :is_controlled
-
-		attr_reader :initiative_value
-		attr_reader :status
-		attr_reader :stress # stress is equivalent to the "cumulative -1 to resistance"
+		DATA_STRUCT = Struct.new(
+			:name,
+			:attack,
+			:defense,
+			:initiative,
+			:actions, # one of :full, :partial, :none
+			:is_controlled,
+			:initiative_value,
+			:stress, # stress is equivalent to the "cumulative -1 to resistance"
+			:status
+		)
 
 		def self.defaults
 			{
@@ -18,38 +19,41 @@ module MnM3eSim
 			:defense => nil,
 			:initiative => 0,
 			:actions => :full,
-			:is_controlled => false
+			:is_controlled => false,
+			:initiative_value => 0,
+			:stress => 0,
+			:status => Status::STATUSES[:none]
 		    }
 		end
 
 		def initialize(args={})
-		    Character::defaults.merge(args).each {|k,v| send("#{k}=",v)}
-		    init_combat
+			@data = DATA_STRUCT.new
+		    super(Character::defaults.merge(args))
 		end
 
 		def init_combat
-			@stress = 0
+			self.stress = 0
 			set_status(:none)
-			@initiative_value = roll_d20(initiative)
+			self.actions = :full
+			self.initiative_value = roll_d20(self.initiative)
 		end
 
 		def attack_target(target)
-			defense = target.defense 	# targets defense
 			# bail if attack or defense is nil
-			return if attack == nil or defense == nil
+			return if self.attack == nil or target.defense == nil
 
-			result = attack.roll_attack(defense.value)
+			result = self.attack.roll_attack(target.defense.value)
 
 			# apply the damage if needed
 			if result[:degree] > 0 then
-				target.apply_damage(attack, result[:damage])
+				target.apply_damage(self.attack, result[:damage])
 			end
 		end
 
 		def apply_damage(attack, damage)
 			# bail if impervious to this attack
-			if defense.impervious != nil then
-				impervious = defense.impervious - attack.penetrating
+			if self.defense.impervious != nil then
+				impervious = self.defense.impervious - attack.penetrating
 				return if impervious >= damage[:damage_impervious]
 			end
 
@@ -57,7 +61,7 @@ module MnM3eSim
 			# The degree will be the status inflicted
 			# Stress caused if degree <= 1 (equivalent to Damage+15)
 			save_roll = roll_d20
-			resistance = save_roll + defense.save - @stress
+			resistance = save_roll + self.defense.save - self.stress
 			degree = check_degree(damage + 10, resistance)
 
 			if save_roll == 20 then
@@ -66,7 +70,7 @@ module MnM3eSim
 
 
 			# if stress is caused, it is for a status effect of -1 and higher (equivalent to save of rank+15)
-			@stress += 1 if attack.is_cause_stress and degree <= 1
+			self.stress += 1 if attack.is_cause_stress and degree <= 1
 
 			status_degree = degree > 0 ? nil : [degree.abs, attack.statuses.length].min
 			update_status(status_degree, attack)
@@ -75,7 +79,7 @@ module MnM3eSim
 		def update_status(new_degree, attack)
 			return if new_degree == nil or new_degree < 1
 
-			cur_degree = @status.degree
+			cur_degree = self.status.degree
 
 			# cumulative attacks add their degrees
 			# NOTE: damage sets the cumulative degree to [2] which means another staggered will add 2 to the degree, but it works out right
@@ -91,15 +95,15 @@ module MnM3eSim
 			return if sv == nil
 
 			if sv.is_a? Symbol then
-				@status = Status::STATUSES[sv]
+				self.status = Status::STATUSES[sv]
 			elsif sv.is_a? Fixnum and sv < 1 then
-				@status = Status::STATUSES[:none]
+				self.status = Status::STATUSES[:none]
 			elsif attack != nil and sv.is_a? Fixnum then
-				@status = attack.statuses[([sv, attack.statuses.length].min)-1]
+				self.status = attack.statuses[([sv, attack.statuses.length].min)-1]
 			else
-				@status = nil
+				self.status = nil
 			end
-			if @status == nil then
+			if self.status == nil then
 				puts sv.class.name
 				puts "sv = #{sv}"
 				puts attack.to_yaml
@@ -109,13 +113,13 @@ module MnM3eSim
 
 		def end_round_recovery(attack)
 			# bail if no recovery check needed: no attack, no recovery
-			return if attack == nil or !attack.is_status_recovery or defense == nil
+			return if attack == nil or !attack.is_status_recovery or self.defense == nil
 			
-			status_degree = @status.degree
+			status_degree = self.status.degree
 			# bail if nothing to recover or if you can't recover (status too high)
 			return if status_degree < 1 or status_degree > 2
 			
-			resistance = check_degree(attack.rank + 10, defense.save + roll_d20)
+			resistance = check_degree(attack.rank + 10, self.defense.save + roll_d20)
 			# if resistance sucessful, lower the status by one
 			if resistance > 0
 				status_degree = 0
