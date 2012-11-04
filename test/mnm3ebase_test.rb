@@ -12,12 +12,12 @@ class DefaultTest < Test::Unit::TestCase
 
   def test_degree
   	dc = 20
-    generate_expected_degree(dc).each{|v|
+    generate_expected_degrees(dc).each{|v|
     	assert_equal(v[1], MnM3eBase::check_degree(dc, v[0]))
     }
   end
 
-  def generate_expected_degree(dc)
+  def generate_expected_degrees(dc)
   	# [Check Result Equal or Greater Than DC + X, Degree]
  	# test at each X+1, X, and X-1
    	[
