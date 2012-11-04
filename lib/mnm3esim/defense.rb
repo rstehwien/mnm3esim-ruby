@@ -15,7 +15,6 @@ module MnM3eSim
 	    end
 
 		def initialize(args={})
-			puts "test"
 			@data = DATA_STRUCT.new
 			super(Defense::defaults.merge(args))
 		end
