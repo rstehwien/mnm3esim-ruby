@@ -16,7 +16,7 @@ class Statustest < Test::Unit::TestCase
   end
 
   def test_expand_none
-    s = Status.expand_statuses([:normal])
+    s = Status.expand_statuses(:normal)
     assert_equal([:normal], s.to_a)
   end
 
@@ -47,4 +47,23 @@ class Statustest < Test::Unit::TestCase
     end
   end
 
+  def test_degree_normal
+    assert_equal(0,Status.degree(:normal))
+  end
+
+  def test_degree_several_one
+    assert_equal(1,Status.degree([:dazed]))
+    assert_equal(1,Status.degree(:hindered))
+    assert_equal(1,Status.degree([:dazed,:fatigued,:hindered]))
+  end
+
+  def test_degree_several_two
+    assert_equal(2,Status.degree(:stunned))
+    assert_equal(2,Status.degree([:dazed,:immobile,:stunned]))
+  end
+
+  def test_degree_several_three
+    assert_equal(3,Status.degree(:transformed))
+    assert_equal(3,Status.degree([:transformed,:fatigued,:stunned]))
+  end
 end

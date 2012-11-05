@@ -41,9 +41,7 @@ module MnM3eSim
 		end
 
 		def self.expand_statuses(symbols)
-			return Set.new([:normal]) if !(symbols.kind_of? Array)
-
-			result = symbols.inject(Set.new) {|set,value| 
+			result = Array(symbols).inject(Set.new) {|set,value| 
 				status = (value.is_a? Symbol) ? STATUS_MAP[value] : nil
 				raise ArgumentError, "invalid status #{value}" if status == nil and value.is_a? Symbol
 
@@ -74,6 +72,11 @@ module MnM3eSim
 				Array(status[:modifiers]).each {|m| a.push(m) if m.is_a? Array }
 				a
 			}
+		end
+
+		def self.degree(symbols)
+			statuses = expand_statuses(symbols)
+			statuses.inject([]) {|a,v| a.push(STATUS_MAP[v][:degree]);a}.max
 		end
 
 		STATUS_MAP=
