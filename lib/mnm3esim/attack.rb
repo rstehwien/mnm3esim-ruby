@@ -2,8 +2,7 @@ module MnM3eSim
 	AttackResult = SuperStruct.new(:attack, :damage, :damage_impervious, :d20, :roll, :is_crit, :degree)
 
 	class Attack < ModifiableStructData
-		DATA_STRUCT = Struct.new(
-			:bonus,
+		attr_accessor_modifiable :bonus,
 			:rank,
 			:penetrating,
 			:is_cause_stress,
@@ -14,7 +13,6 @@ module MnM3eSim
 			:is_progressive,
 			:is_multiattack,
 			:statuses
-		)
 
 		def self.defaults_damage
 			{
@@ -60,12 +58,11 @@ module MnM3eSim
 		end
 
 		def initialize(args={})
-			@data = DATA_STRUCT.new
 		    super(Attack::defaults.merge(args))
 		end
 
 		def statuses=(value)
-			@data.statuses = value.inject([]) {|a,v| (v.kind_of? Status) ? a.push(v) : a.push(Status::STATUSES[v]) }
+			@statuses = value.inject([]) {|a,v| (v.kind_of? Status) ? a.push(v) : a.push(Status::STATUSES[v]) }
 		end
 
 		def status_by_resist_degree(degree)

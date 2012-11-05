@@ -2,11 +2,9 @@ module MnM3eSim
 	ResistResult = SuperStruct.new(:d20, :roll, :degree, :stress, :status)
 
 	class Defense < ModifiableStructData
-		DATA_STRUCT = Struct.new(
-			:value,
+		attr_accessor_modifiable :value,
 			:save,
 			:impervious # any attack difficulty less is ignored
-		)
 
 		def self.defaults
 			{
@@ -17,7 +15,6 @@ module MnM3eSim
 	    end
 
 		def initialize(args={})
-			@data = DATA_STRUCT.new
 			super(Defense::defaults.merge(args))
 		end
 

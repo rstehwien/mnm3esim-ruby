@@ -1,7 +1,6 @@
 module MnM3eSim
 	class Character < ModifiableStructData
-		DATA_STRUCT = Struct.new(
-			:name,
+		attr_accessor_modifiable :name,
 			:attack,
 			:defense,
 			:initiative,
@@ -10,7 +9,6 @@ module MnM3eSim
 			:initiative_value,
 			:stress, # stress is equivalent to the "cumulative -1 to resistance"
 			:status
-		)
 
 		def self.defaults
 			{
@@ -27,7 +25,6 @@ module MnM3eSim
 		end
 
 		def initialize(args={})
-			@data = DATA_STRUCT.new
 		    super(Character::defaults.merge(args))
 		end
 
