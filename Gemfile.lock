@@ -6,9 +6,11 @@ PATH
 GEM
   remote: https://rubygems.org/
   specs:
+    rake (0.9.2.2)
 
 PLATFORMS
-  x86-mingw32
+  ruby
 
 DEPENDENCIES
   mnm3esim!
+  rake (~> 0.9.2.2)

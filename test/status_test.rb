@@ -36,7 +36,7 @@ class Statustest < Test::Unit::TestCase
 
   def test_expand_incap
     s = Status.expand_statuses([:incapacitated])
-    assert_equal([:incapacitated, :defenseless, :stunned, :action_none, :unaware, :prone, :hindered], s.to_a)
+    assert_equal([:incapacitated, :defenseless, :stunned, :action_none, :unaware, :prone, :hindered].sort_by {|sym| sym.to_s}, s.to_a.sort_by {|sym| sym.to_s})
   end
 
   def test_all_modifiers_incap
