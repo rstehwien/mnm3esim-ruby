@@ -3,6 +3,7 @@ $: << File.dirname(__FILE__)
 require 'yaml'
 
 require 'mnm3esim/enumerable.rb'
+require 'mnm3esim/superstruct.rb'
 require 'mnm3esim/mnm3ebase.rb'
 require 'mnm3esim/modifiable.rb'
 require 'mnm3esim/status.rb'
