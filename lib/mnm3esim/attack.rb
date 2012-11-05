@@ -66,13 +66,13 @@ module MnM3eSim
 		end
 
 		def status_by_resist_degree(degree)
-			return Status::STATUSES[:none] if degree > 0
+			return Status::STATUSES[:normal] if degree > 0
 
 			status_by_degree(degree.abs)
 		end
 
 		def status_by_degree(degree)
-			return Status::STATUSES[:none] if degree < 1
+			return Status::STATUSES[:normal] if degree < 1
 
 			self.statuses[[degree, self.statuses.length].min-1]
 		end

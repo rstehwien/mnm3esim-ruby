@@ -20,7 +20,7 @@ module MnM3eSim
 			:is_controlled => false,
 			:initiative_value => 0,
 			:stress => 0,
-			:status => Status::STATUSES[:none]
+			:status => Status::STATUSES[:normal]
 		    }
 		end
 
@@ -30,7 +30,7 @@ module MnM3eSim
 
 		def init_combat
 			self.stress = 0
-			set_status(:none)
+			set_status(:normal)
 			self.actions = :full
 			self.initiative_value = roll_d20(self.initiative)
 		end
@@ -75,18 +75,14 @@ module MnM3eSim
 			elsif sv.is_a? Status then
 				self.status = sv
 			elsif sv.is_a? Fixnum and sv < 1 then
-				self.status = Status::STATUSES[:none]
+				self.status = Status::STATUSES[:normal]
 			elsif attack != nil and sv.is_a? Fixnum then
 				self.status = attack.status_by_degree(sv)
 			else
 				self.status = nil
 			end
-			if self.status == nil then
-				puts sv.class.name
-				puts "sv = #{sv}"
-				puts attack.to_yaml
-				throw "BAD STATUS"
-			end
+			raise ArgumentError, "Bad Status #{sv}" if self.status == nil
+			self.status
 		end
 
 		def end_round_recovery(attack)
