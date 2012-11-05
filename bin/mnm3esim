@@ -2,8 +2,8 @@
 
 require "rubygems"
 require "bundler/setup"
-
 require 'mnm3esim'
+
 include MnM3eSim
 
 def run_sim(name, attack)
