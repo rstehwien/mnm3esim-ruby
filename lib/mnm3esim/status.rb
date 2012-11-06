@@ -1,5 +1,3 @@
-require 'set'
-
 module MnM3eSim
 	class Status < SuperStruct.new(:status, :degree, :modifiers, :recovery, :replace)
 		# :modifiers => array of modifiers in form of one of the following
@@ -33,29 +31,28 @@ module MnM3eSim
 		end
 
 		def self.expand_statuses(value)
-			result = Set.new
+			result = {}
 			Array(value).each do |v| 
 				status = get_status(v)
 				next if status == nil
 
-				result.add(status.status)
-				modifiers = status.modifiers
-				result.merge(expand_statuses(modifiers)) if modifiers.is_a? Array
+				result[status.status] = status
+
+				result = result.merge(expand_statuses(status.modifiers)) if status.modifiers.is_a? Array
 			end
 
 			# remove any we replace
-			result.inject([]) {|a,v| a.concat(Array(get_status(v).replace))}.each do |d| result.delete(d) end
+			result.inject([]) {|a,(k,status)| a.concat(Array(status.replace))}.each do |d| result.delete(d) end
 
-			result.add(:normal) if result.length < 1
+			result[:normal] = STATUSES[:normal] if result.length < 1
 			result.delete(:normal) if result.length > 1
 
-			result.to_a
+			result
 		end
 
 		def self.all_modifiers(value)
 			statuses = expand_statuses(value)
-			statuses.inject([]) {|a,v|
-				status = get_status(v)
+			statuses.inject([]) {|a,(k,status)|
 				Array(status.modifiers).each {|m| a.push(m) if m.is_a? Array }
 				a
 			}
@@ -63,7 +60,7 @@ module MnM3eSim
 
 		def self.degree(value)
 			statuses = expand_statuses(value)
-			statuses.inject([]) {|a,v| a.push(get_status(v).degree);a}.max
+			statuses.inject([]) {|a,(k,status)| a.push(status.degree);a}.max
 		end
 	end
 
