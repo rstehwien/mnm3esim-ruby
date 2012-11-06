@@ -1,7 +1,7 @@
 module MnM3eSim
 	StatusModifier = SuperStruct.new(:group, :property, :modifier, :description)
 
-	class Status < SuperStruct.new(:status, :degree, :modifiers, :recovery, :replace)
+	class Status < SuperStruct.new(:key, :degree, :modifiers, :recovery, :replace)
 		# :modifiers => array of modifiers in form of one of the following
 		# nil => no modifiers this program can express currently
 		# [symbolN,modifierN] => an array of any number of symbols or modifiers
@@ -16,8 +16,8 @@ module MnM3eSim
 
 		def initialize(*args, &block)
 			super(*args, &block)
-			raise ArgumentError, "Status not unique #{self.status}" if STATUSES.has_key? self.status
-			STATUSES[self.status] = self
+			raise ArgumentError, "Status not unique #{self.key}" if STATUSES.has_key? self.key
+			STATUSES[self.key] = self
 		end
 
 		def self.get_status(value)
@@ -38,7 +38,7 @@ module MnM3eSim
 				status = get_status(v)
 				next if status == nil
 
-				result[status.status] = status
+				result[status.key] = status
 
 				result = result.merge(expand_statuses(status.modifiers)) if status.modifiers.is_a? Array
 			end
@@ -73,14 +73,14 @@ module MnM3eSim
 	# ALL STANDARD STATUSES
 	[
 		# NORMAL 
-		{:status => :normal, :degree => 0, :modifiers => nil, :recovery => false, :replace => nil}, 
+		{:key => :normal, :degree => 0, :modifiers => nil, :recovery => false, :replace => nil}, 
 
 		########################################
 		# BASIC CONDITIONS
 		########################################
 		# COMPELLED: action chosen by controller, limited to free actions and a single standard action per turn
 		{
-			:status => :compelled, 
+			:key => :compelled, 
 			:degree => 2, 
 			:modifiers => [:action_partial, :actions_controlled], 
 			:recovery => false
@@ -88,7 +88,7 @@ module MnM3eSim
 
 		# CONTROLLED: full actions chosen by controller
 		{
-			:status => :controlled, 
+			:key => :controlled, 
 			:degree => 3, 
 			:modifiers => [:actions_controlled], 
 			:recovery => false,
@@ -97,7 +97,7 @@ module MnM3eSim
 		
 		# DAZED: limited to free actions and a single standard action per turn
 		{
-			:status => :dazed, 
+			:key => :dazed, 
 			:degree => 1, 
 			:modifiers => [:action_partial], 
 			:recovery => false
@@ -105,7 +105,7 @@ module MnM3eSim
 		
 		# DEBILITATED: The character has one or more abilities lowered below –5.
 		{
-			:status => :debilitated, 
+			:key => :debilitated, 
 			:degree => 3, 
 			:modifiers => [:action_none], 
 			:recovery => false,
@@ -114,7 +114,7 @@ module MnM3eSim
 
 		# DEFENSELESS: defense = 0
 		{
-			:status => :defenseless, 
+			:key => :defenseless, 
 			:degree => 2, 
 			:modifiers =>  [[:defense, :value, lambda{|x|0}, "defenseless"]], 
 			:recovery => false,
@@ -123,7 +123,7 @@ module MnM3eSim
 
 		# DISABLED: checks - 5 
 		{
-			:status => :disabled, 
+			:key => :disabled, 
 			:degree => 2, 
 			:modifiers =>  [[:ALL, :roll_d20, lambda{|x| x - 5}, "disabled; -5 to checks"]], 
 			:recovery => false,
@@ -132,7 +132,7 @@ module MnM3eSim
 
 		# FATIGUED: hindered, recover in an hour
 		{
-			:status => :fatigued, 
+			:key => :fatigued, 
 			:degree => 1, 
 			:modifiers => [:hindered], 
 			:recovery => false
@@ -140,7 +140,7 @@ module MnM3eSim
 
 		# HINDERED: speed - 1 (half speed)
 		{
-			:status => 
+			:key => 
 			:hindered, :degree => 1, 
 			:modifiers => [[:character, :speed, lambda{|x| x - 1}, "hindered: -1 speed"]], 
 			:recovery => false
@@ -148,7 +148,7 @@ module MnM3eSim
 		
 		# IMMOBLE:
 		{
-			:status => :immobile, 
+			:key => :immobile, 
 			:degree => 2, 
 			:modifiers =>  [[:character, :speed, lambda{|x| nil}, "immoble: no speed"]], 
 			:recovery => false,
@@ -157,7 +157,7 @@ module MnM3eSim
 		
 		# IMPAIRED: checks - 2 
 		{
-			:status => :impaired, 
+			:key => :impaired, 
 			:degree => 1, 
 			:modifiers => [[:ALL, :roll_d20, lambda{|x| x - 2}, "impaired; -2 to checks"]], 
 			:recovery => false
@@ -165,7 +165,7 @@ module MnM3eSim
 
 		# STUNNED:
 		{
-			:status => :stunned, 
+			:key => :stunned, 
 			:degree => 2, 
 			:modifiers => [:action_none], 
 			:recovery => false,
@@ -174,7 +174,7 @@ module MnM3eSim
 
 		# TRANSFORMED: becomes something else
 		{
-			:status => :transformed, 
+			:key => :transformed, 
 			:degree => 3, 
 			:modifiers => [:action_none], 
 			:recovery => false
@@ -182,7 +182,7 @@ module MnM3eSim
 		
 		# UNAWARE:unaware of surroundings and unable to act on it
 		{
-			:status => :unaware, 
+			:key => :unaware, 
 			:degree => 3, 
 			:modifiers => [:action_none], 
 			:recovery => false
@@ -190,7 +190,7 @@ module MnM3eSim
 		
 		# VULNERABLE: defense.value/2 [RU]
 		{
-			:status => :vulnerable, 
+			:key => :vulnerable, 
 			:degree => 1, 
 			:modifiers => [[:defense, :value, lambda{|x| (x.to_f/2).ceil}, "vulnerable: 1/2 defense"]], 
 			:recovery => false
@@ -198,7 +198,7 @@ module MnM3eSim
 		
 		# WEAKENED: trait is lowered
 		{
-			:status => :weakened, 
+			:key => :weakened, 
 			:degree => 1, 
 			:modifiers => nil, 
 			:recovery => false
@@ -210,7 +210,7 @@ module MnM3eSim
 
 		# ASLEEP: perception degree 3 removes, sudden movement removes
 		{
-			:status => :asleep, 
+			:key => :asleep, 
 			:degree => 3, 
 			:modifiers => [:defenseless, :stunned, :unaware], 
 			:recovery => false
@@ -218,7 +218,7 @@ module MnM3eSim
 		
 		# BLIND:
 		{
-			:status => :blind, 
+			:key => :blind, 
 			:degree => 2, 
 			:modifiers => [:hindered, :unaware, :vulnerable, :impaired], 
 			:recovery => false
@@ -226,7 +226,7 @@ module MnM3eSim
 		
 		# BOUND:
 		{
-			:status => :bound, 
+			:key => :bound, 
 			:degree => 2, 
 			:modifiers => [:defenseless, :immobile, :impaired], 
 			:recovery => false
@@ -234,7 +234,7 @@ module MnM3eSim
 		
 		# DEAF:
 		{
-			:status => :deaf, 
+			:key => :deaf, 
 			:degree => 2, 
 			:modifiers => [:unaware], 
 			:recovery => false
@@ -242,7 +242,7 @@ module MnM3eSim
 		
 		# DYING:
 		{
-			:status => :dying, 
+			:key => :dying, 
 			:degree => 4, 
 			:modifiers => [:incapacitated], 
 			:recovery => false
@@ -250,7 +250,7 @@ module MnM3eSim
 		
 		# ENTRANCED: take no action, any threat ends entranced
 		{
-			:status => :entranced, 
+			:key => :entranced, 
 			:degree => 1, 
 			:modifiers => [:action_none], 
 			:recovery => true
@@ -258,7 +258,7 @@ module MnM3eSim
 
 		# EXHAUSTED:
 		{
-			:status => :exhausted, 
+			:key => :exhausted, 
 			:degree => 2, 
 			:modifiers => [:impaired, :hindered], 
 			:recovery => false,
@@ -267,7 +267,7 @@ module MnM3eSim
 		
 		# INCAPICITATED:
 		{
-			:status => :incapacitated, 
+			:key => :incapacitated, 
 			:degree => 3, 
 			:modifiers => [:defenseless, :stunned, :unaware, :prone], 
 			:recovery => false
@@ -275,7 +275,7 @@ module MnM3eSim
 		
 		# PARALYZED: Physically immobile but can take purely mental actions
 		{
-			:status => :paralyzed, 
+			:key => :paralyzed, 
 			:degree => 3, 
 			:modifiers => [:defenseless, :immobile, :stunned], 
 			:recovery => false
@@ -284,7 +284,7 @@ module MnM3eSim
 		# PRONE:
 		#   really gives close attacks +5 and ranged -5 but for purposes of the sim the status effect was worst case
 		{
-			:status => :prone, 
+			:key => :prone, 
 			:degree => 2, 
 			:modifiers => [
 				:hindered, 
@@ -294,7 +294,7 @@ module MnM3eSim
 		
 		# RESTRAINED:
 		{
-			:status => :restrained, 
+			:key => :restrained, 
 			:degree => 2, 
 			:modifiers => [:hindered, :vulnerable], 
 			:recovery => false
@@ -302,7 +302,7 @@ module MnM3eSim
 		
 		# STAGGERED:
 		{
-			:status => :staggered, 
+			:key => :staggered, 
 			:degree => 2, 
 			:modifiers => [:dazed, :hindered], 
 			:recovery => false
@@ -310,7 +310,7 @@ module MnM3eSim
 		
 		# SUPRISED:
 		{
-			:status => :suprised, 
+			:key => :suprised, 
 			:degree => 1, 
 			:modifiers => [:stunned, :vulnerable], 
 			:recovery => true
@@ -320,18 +320,18 @@ module MnM3eSim
 		# SPECIAL CONDITONS FOR PROGRAM
 		########################################
 		{
-			:status => :action_partial, 
+			:key => :action_partial, 
 			:degree => 0, 
 			:modifiers => [[:character, :actions, lambda{|x| :partial}, "partial actions"]], 
 		},
 		{
-			:status => :action_none, 
+			:key => :action_none, 
 			:degree => 0, 
 			:modifiers => [[:character, :actions, lambda{|x| :none}, "no actions"]], 
 			:replace => :action_partial
 		},
 		{
-			:status => :actions_controlled, 
+			:key => :actions_controlled, 
 			:degree => 0, 
 			:modifiers => [[:character, :is_controlled, lambda{|x| true}, "actions controlled"]], 
 		},
