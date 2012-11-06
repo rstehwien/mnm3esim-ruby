@@ -41,9 +41,14 @@ class Statustest < Test::Unit::TestCase
 
   def test_all_modifiers_incap
     m = Status.all_modifiers([:incapacitated])
+
     assert_equal(4,m.length)
     m.each do |v| 
-      assert((v.is_a? Array), "each item better be an array")
+      assert((v.is_a? StatusModifier), "each item better be a StatusModifier #{v.to_yaml}")
+      assert((v.group.is_a? Symbol), "group better be a symbol #{v.to_yaml}")
+      assert((v.property.is_a? Symbol), "property better be a symbol #{v.to_yaml}")
+      assert((v.modifier.is_a? Proc), "modifier better be a Proc #{v.to_yaml}")
+      assert((v.description == nil or (v.description.is_a? String)), "description better be nil or string #{v.to_yaml}")
     end
   end
 

@@ -1,12 +1,14 @@
 module MnM3eSim
+	StatusModifier = SuperStruct.new(:group, :property, :modifier, :description)
+
 	class Status < SuperStruct.new(:status, :degree, :modifiers, :recovery, :replace)
 		# :modifiers => array of modifiers in form of one of the following
 		# nil => no modifiers this program can express currently
 		# [symbolN,modifierN] => an array of any number of symbols or modifiers
 		# symbol is another status
-		# mofifier is an array of
-		# 	[target, property, lambda]
-		# where target is one of :all, :character, :attack, :defense
+		# mofifier is an array of corresponding to StatusModifier.  
+		#  :group => :ALL means all groups, can be array or individual
+		#  :property => :ALL means all properties, can be array or individual
 
 		# :recovery => true if automatically recovered, actual recovery varies but this is simplified for sim
 
@@ -52,10 +54,14 @@ module MnM3eSim
 
 		def self.all_modifiers(value)
 			statuses = expand_statuses(value)
-			statuses.inject([]) {|a,(k,status)|
-				Array(status.modifiers).each {|m| a.push(m) if m.is_a? Array }
-				a
-			}
+
+			modifiers = []
+			statuses.each do |k,status|
+				Array(status.modifiers).each do |m|
+					modifiers.push(StatusModifier.new(*m)) if m.is_a? Array
+				end
+			end
+			modifiers
 		end
 
 		def self.degree(value)
@@ -119,7 +125,7 @@ module MnM3eSim
 		{
 			:status => :disabled, 
 			:degree => 2, 
-			:modifiers =>  [[:defense, :roll_d20, lambda{|x| x - 5}, "disabled; -5 to checks"]], 
+			:modifiers =>  [[:ALL, :roll_d20, lambda{|x| x - 5}, "disabled; -5 to checks"]], 
 			:recovery => false,
 			:replace => :impaired
 		},
@@ -153,7 +159,7 @@ module MnM3eSim
 		{
 			:status => :impaired, 
 			:degree => 1, 
-			:modifiers => [[:defense, :roll_d20, lambda{|x| x - 2}, "impaired; -2 to checks"]], 
+			:modifiers => [[:ALL, :roll_d20, lambda{|x| x - 2}, "impaired; -2 to checks"]], 
 			:recovery => false
 		},
 
