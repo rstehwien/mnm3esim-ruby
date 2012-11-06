@@ -83,18 +83,15 @@ module MnM3eSim
 				a.push(effect.attack.status_by_degree(effect.degree).key)
 			}
 
-			self.status = Status.expand_statuses(s)
-			self.status_degree = Status.degree(self.status.values)
+			statuses = Status.combined_status(s)
+			self.status = statuses[:statuses]
+			self.status_degree = statuses[:degree]
 
 			#puts self.status.inject([]){|a,(k,v)| a.push(k)}.to_yaml
 
 			#puts "#{self.name} update_status status_degree: #{self.status_degree} total_stress: #{self.stress}"; sleep 1
 
-			update_modifiers
-		end
-
-		def update_modifiers
-			Status.all_modifiers(self.status.values).each do |m|
+			statuses[:modifiers].each do |m|
 				# TODO update modifiers
 			end
 		end

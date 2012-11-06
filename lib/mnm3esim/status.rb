@@ -32,7 +32,36 @@ module MnM3eSim
 			end
 		end
 
+		def self.combined_status(value)
+			statuses = do_expand_statuses(value)
+
+			modifiers = []
+			degrees = []
+			statuses.each do |k,status|
+				degrees.push(status.degree)
+				Array(status.modifiers).each do |m|
+					modifiers.push(StatusModifier.new(*m)) if m.is_a? Array
+				end
+			end
+			max = degrees.length > 0 ? degrees.max : 0		
+
+			{:statuses => statuses, :modifiers => modifiers, :degree => max}
+		end
+
 		def self.expand_statuses(value)
+			combined_status(value)[:statuses]
+		end
+
+		def self.all_modifiers(value)
+			combined_status(value)[:modifiers]
+		end
+
+		def self.degree(value)
+			combined_status(value)[:degree]
+		end
+
+		protected
+		def self.do_expand_statuses(value)
 			value = value.values if value.kind_of? Hash
 			result = {}
 			Array(value).each do |v| 
@@ -41,7 +70,7 @@ module MnM3eSim
 
 				result[status.key] = status
 
-				result = result.merge(expand_statuses(status.modifiers)) if status.modifiers.is_a? Array
+				result = result.merge(do_expand_statuses(status.modifiers)) if status.modifiers.is_a? Array
 			end
 
 			# remove any we replace
@@ -54,22 +83,6 @@ module MnM3eSim
 			result
 		end
 
-		def self.all_modifiers(value)
-			statuses = expand_statuses(value)
-
-			modifiers = []
-			statuses.each do |k,status|
-				Array(status.modifiers).each do |m|
-					modifiers.push(StatusModifier.new(*m)) if m.is_a? Array
-				end
-			end
-			modifiers
-		end
-
-		def self.degree(value)
-			statuses = expand_statuses(value)
-			statuses.inject([]) {|a,(k,status)| a.push(status.degree);a}.max
-		end
 	end
 
 	# ALL STANDARD STATUSES
