@@ -33,10 +33,11 @@ module MnM3eSim
 		end
 
 		def self.expand_statuses(value)
+			value = value.values if value.kind_of? Hash
 			result = {}
 			Array(value).each do |v| 
 				status = get_status(v)
-				next if status == nil
+				next if status == nil or result.has_key? status.key
 
 				result[status.key] = status
 
@@ -44,7 +45,8 @@ module MnM3eSim
 			end
 
 			# remove any we replace
-			result.inject([]) {|a,(k,status)| a.concat(Array(status.replace))}.each do |d| result.delete(d) end
+			replacing = result.inject([]) {|a,(k,status)| a.push(*Array(status.replace))}
+			result.delete_if {|k,v| replacing.include? k}
 
 			result[:normal] = STATUSES[:normal] if result.length < 1
 			result.delete(:normal) if result.length > 1

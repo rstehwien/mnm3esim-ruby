@@ -55,16 +55,16 @@ module MnM3eSim
 		end
 
 		def combat_finished?
-			character1.status.degree > 2 or character2.status.degree > 2
+			character1.status_degree > 2 or character2.status_degree > 2
 		end
 
 		def run_round
 			@init_order[0].attack_target(@init_order[1])
-			@init_order[0].end_round_recovery(@init_order[1].attack)
+			@init_order[0].end_round_recovery
 			return if combat_finished?
 
 			@init_order[1].attack_target(@init_order[0])
-			@init_order[1].end_round_recovery(@init_order[0].attack)
+			@init_order[1].end_round_recovery
 		end
 	end
 

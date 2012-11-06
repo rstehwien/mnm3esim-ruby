@@ -1,5 +1,5 @@
 module MnM3eSim
-	ResistResult = SuperStruct.new(:d20, :roll, :degree, :stress, :status)
+	ResistResult = SuperStruct.new(:defense, :d20, :roll, :degree, :stress, :status)
 
 	class Defense < ModifiableStructData
 		attr_accessor_modifiable :value,
@@ -21,6 +21,7 @@ module MnM3eSim
 		def resist_hit(hit, stress)
 			# basic full resist
 			resist = ResistResult.new({
+				:defense=>self,
 				:d20=>nil,
 				:roll=>nil,
 				:degree=>4,

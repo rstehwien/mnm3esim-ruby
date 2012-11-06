@@ -39,6 +39,11 @@ class Statustest < Test::Unit::TestCase
     assert_equal([:incapacitated, :defenseless, :stunned, :action_none, :unaware, :prone, :hindered].sort_by {|sym| sym.to_s}, s.keys.sort_by {|sym| sym.to_s})
   end
 
+  def test_expand_incap_status
+    s = Status.expand_statuses(Status.get_status :incapacitated)
+    assert_equal([:incapacitated, :defenseless, :stunned, :action_none, :unaware, :prone, :hindered].sort_by {|sym| sym.to_s}, s.keys.sort_by {|sym| sym.to_s})
+  end
+
   def test_all_modifiers_incap
     m = Status.all_modifiers([:incapacitated])
 
@@ -70,5 +75,9 @@ class Statustest < Test::Unit::TestCase
   def test_degree_several_three
     assert_equal(3,Status.degree(:transformed))
     assert_equal(3,Status.degree([:transformed,:fatigued,:stunned]))
+  end
+
+  def test_degree_incap
+    assert_equal(3,Status.degree(Status.expand_statuses(:incapacitated)))
   end
 end

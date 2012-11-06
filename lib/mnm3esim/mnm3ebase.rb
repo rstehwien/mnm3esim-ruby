@@ -8,5 +8,16 @@ module MnM3eSim
 			result = check - difficulty
 			(result/5) + (result<0 ? 0 : 1)
 		end
+
+		#rand(36**8).to_s(36) for tiny token
+		@@unique_hashes = []
+		def self.get_unique_hash()
+			h = nil
+			begin
+				h = rand(36**8)
+			end while @@unique_hashes.include? h
+			h
+		end
+
 	end
 end

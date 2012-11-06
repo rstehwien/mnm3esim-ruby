@@ -20,6 +20,12 @@ module MnM3eSim
 		def initialize(args={})
 			clear_modifiers
 			args.each {|k,v| send("#{k}=",v)}
+
+			@myhash = MnM3eBase::get_unique_hash
+		end
+
+		def hash
+			@myhash
 		end
 
 		def clear_modifiers
