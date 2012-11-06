@@ -16,6 +16,7 @@ module MnM3eSim
 
 		def initialize(*args, &block)
 			super(*args, &block)
+			raise ArgumentError, "Status not unique #{self.status}" if STATUSES.has_key? self.status
 			STATUSES[self.status] = self
 		end
 
@@ -24,7 +25,7 @@ module MnM3eSim
 				return value
 			elsif (value.is_a? String) or (value.is_a? Symbol) then
 				s = STATUSES[value.to_sym]
-				raise ArgumentError, "invalid status" if s == nil
+				raise ArgumentError, "Invalid status #{s}" if s == nil
 				return s
 			else
 				return nil
