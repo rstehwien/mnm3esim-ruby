@@ -61,20 +61,16 @@ module MnM3eSim
 		    super(Attack::defaults.merge(args))
 		end
 
-		def statuses=(value)
-			@statuses = value.inject([]) {|a,v| (v.kind_of? Status) ? a.push(v) : a.push(Status::STATUSES[v]) }
-		end
-
 		def status_by_resist_degree(degree)
-			return Status::STATUSES[:normal] if degree > 0
+			return Status::get_status(:normal) if degree > 0
 
 			status_by_degree(degree.abs)
 		end
 
 		def status_by_degree(degree)
-			return Status::STATUSES[:normal] if degree < 1
+			return Status::get_status(:normal) if degree < 1
 
-			self.statuses[[degree, self.statuses.length].min-1]
+			Status::get_status(self.statuses[[degree, self.statuses.length].min-1])
 		end
 
 

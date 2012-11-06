@@ -20,7 +20,7 @@ module MnM3eSim
 			:is_controlled => false,
 			:initiative_value => 0,
 			:stress => 0,
-			:status => Status::STATUSES[:normal]
+			:status => :normal
 		    }
 		end
 
@@ -70,16 +70,10 @@ module MnM3eSim
 		def set_status(sv, attack=nil)
 			return if sv == nil
 
-			if sv.is_a? Symbol then
-				self.status = Status::STATUSES[sv]
-			elsif sv.is_a? Status then
-				self.status = sv
-			elsif sv.is_a? Fixnum and sv < 1 then
-				self.status = Status::STATUSES[:normal]
-			elsif attack != nil and sv.is_a? Fixnum then
+			if attack != nil and sv.is_a? Fixnum then
 				self.status = attack.status_by_degree(sv)
 			else
-				self.status = nil
+				self.status = Status::get_status(sv)
 			end
 			raise ArgumentError, "Bad Status #{sv}" if self.status == nil
 			self.status
