@@ -18,10 +18,15 @@ end
 
 run_sim("BASIC DAMAGE", Attack::create_damage)
 #run_sim("BASIC AFFLICTION", Attack::create_affliction)
+run_sim("BASIC IMPAIR AFFLICTION", Attack::create_affliction({:statuses=>[:impaired,:disabled,:incapacitated]}))
 run_sim("CUMULATIVE AFFLICTION", Attack::create_affliction({:cumulative_statuses=>[1,2]}))
 run_sim("PROGRESSIVE AFFLICTION", Attack::create_affliction({:is_progressive=>true}))
 run_sim("CUMULATIVE+PROGRESSIVE AFFLICTION", 
 	Attack::create_affliction({ :cumulative_statuses=>[1,2], :is_progressive=>true }))
+
+run_sim("DAMAGE AFFLICTION", Attack::create_affliction({:is_cause_stress => true}))
+run_sim("DAMAGE IMPAIR AFFLICTION", 
+	Attack::create_affliction({:is_cause_stress => true, :statuses=>[:impaired,:disabled,:incapacitated]}))
 
 # Wait for all threads to end
 Thread.list.each {|t| t.join if t != Thread.current }

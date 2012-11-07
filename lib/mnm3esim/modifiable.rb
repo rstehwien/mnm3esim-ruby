@@ -53,9 +53,11 @@ module MnM3eSim
 		def apply_modifiers(property, value)
 			property = property.to_sym
 
+			return value if !(@modifiers.has_key? property) and !(@modifiers.has_key? :ALL)
+
 			Array(@modifiers[property]).concat(Array(@modifiers[:ALL])).each{|modifier| 
 				value = modifier.call(value)
-			} if @modifiers.has_key? property or @modifiers.has_key? :ALL
+			}
 
 			value
 		end

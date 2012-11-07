@@ -71,11 +71,12 @@ module MnM3eSim
 			end
 
 			# non-cumulative only replaces if new degree is better
-			if new_degree > cur_degree then
-				#puts "#{self.name} apply_damage cur_degree: #{cur_degree} new_degree: #{new_degree}"; sleep 1
-				self.effects[hit.attack] = CharacterEffect.new(hit.attack, resist.defense, new_degree)
-				update_status
-			end
+			add_effect(CharacterEffect.new(hit.attack, resist.defense, new_degree)) if new_degree > cur_degree 
+		end
+
+		def add_effect(effect)
+			self.effects[effect.attack] = effect
+			update_status
 		end
 
 		def update_status
@@ -97,7 +98,7 @@ module MnM3eSim
 			self.defense.clear_modifiers if self.defense != nil
 
 			statuses[:modifiers].each do |m|
-				groups = m.group == (Array(m.group).include? :ALL) ? [:character, :attack, :defense] : Array(m.group)
+				groups = (Array(m.group).include? :ALL) ? [:character, :attack, :defense] : Array(m.group)
 				self.add_modifier(m.property, m.modifier) if groups.include? :character
 				self.attack.add_modifier(m.property, m.modifier) if self.attack != nil and groups.include? :attack
 				self.defense.add_modifier(m.property, m.modifier) if self.defense != nil and groups.include? :defense
