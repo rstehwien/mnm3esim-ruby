@@ -6,45 +6,41 @@ require 'mnm3esim'
 
 include MnM3eSim
 
-$tp = ThreadPool.new(4)
+#$tp = ThreadPool.new(4)
 
 def run_sim(name, attack)
-	$tp.schedule do
+	#$tp.schedule do
 		attacker = Character.new({:name => "Atacker", :attack => attack})
 		defender = Character.new({:name => "Defender", :defense => Defense.new})
 
 		result = CombatSimulator.new({ :character1 => attacker, :character2 => defender }).run.format_stats
 		puts "==========\n#{name}\n#{result}=========="
-	end
+	#end
 end
-
-stat_defense = [:vulnerable,:defenseless,:incapacitated]
-stat_impair = [:impaired,:disabled,:incapacitated]
 
 run_sim("BASIC DAMAGE", Attack::create_damage)
 
-run_sim("BASIC IMPAIR AFFLICTION", Attack::create_affliction({:statuses=>stat_impair}))
-run_sim("BASIC DEFENSE AFFLICTION", Attack::create_affliction({:statuses=>stat_defense}))
+afflictions = [
+	{:name => "DAMAGE", :statuses => {:statuses =>[:dazed,:staggered,:incapacitated]}},
+	{:name => "DEFENSE", :statuses => {:statuses =>[:vulnerable,:defenseless,:incapacitated]}},
+	{:name => "IMPAIR", :statuses => {:statuses =>[:impaired,:disabled,:incapacitated]}}
+]
 
-run_sim("CUMULATIVE IMPAIR AFFLICTION", 
-	Attack::create_affliction({:statuses=>stat_impair, :cumulative_statuses=>[1,2]}))
-run_sim("CUMULATIVE DEFENSE AFFLICTION", 
-	Attack::create_affliction({:statuses=>stat_defense, :cumulative_statuses=>[1,2]}))
+extras = [
+	{:name => "", :extras => {}},
+	{:name => "CUMULATIVE", :extras => {:cumulative_statuses=>[1,2]}},
+	{:name => "PROGRESSIVE", :extras => {:is_progressive=>true}},
+	{:name => "CUMULATIVE+PROGRESSIVE", :extras => {:cumulative_statuses=>[1,2],:is_progressive=>true}},
+	{:name => "STRESSFUL", :extras => {:is_cause_stress => true}},
+]
 
-run_sim("PROGRESSIVE IMPAIR AFFLICTION", 
-	Attack::create_affliction({:statuses=>stat_impair, :is_progressive=>true}))
-run_sim("PROGRESSIVE DEFENSE AFFLICTION", 
-	Attack::create_affliction({:statuses=>stat_defense, :is_progressive=>true}))
-
-run_sim("PROGRESSIVE+CUMULATIVE IMPAIR AFFLICTION", 
-	Attack::create_affliction({:statuses=>stat_impair, :is_progressive=>true, :cumulative_statuses=>[1,2]}))
-run_sim("PROGRESSIVE+CUMULATIVE DEFENSE AFFLICTION", 
-	Attack::create_affliction({:statuses=>stat_defense, :is_progressive=>true, :cumulative_statuses=>[1,2]}))
-
-run_sim("DAMAGE IMPAIR AFFLICTION", 
-	Attack::create_affliction({:is_cause_stress => true, :statuses=>stat_impair}))
-run_sim("DAMAGE DEFENSE AFFLICTION", 
-	Attack::create_affliction({:is_cause_stress => true, :statuses=>stat_defense}))
+afflictions.each do |statuses|
+	extras.each do |extra|
+		name = "AFFLICTION: #{statuses[:name]} #{extra[:name]}".strip
+		options = statuses[:statuses].merge(extra[:extras])
+		run_sim(name, Attack::create_affliction(options))
+	end
+end
 
 # Wait for all threads to end
-at_exit { $tp.shutdown }
+#at_exit { $tp.shutdown }
