@@ -30,12 +30,12 @@ module MnM3eSim
 		end
 
 		def init_combat
-			self.stress = 0
-			self.status = Status.expand_statuses(:normal)
-			self.status_degree = 0
-			self.effects = {}
-			self.actions = :full
 			self.initiative_value = roll_d20(self.initiative)
+			self.stress = 0
+			self.actions = :full
+
+			self.effects = {}
+			update_status
 		end
 
 		def attack_target(target)
@@ -91,8 +91,16 @@ module MnM3eSim
 
 			#puts "#{self.name} update_status status_degree: #{self.status_degree} total_stress: #{self.stress}"; sleep 1
 
+			# Handle the modifiers
+			self.clear_modifiers
+			self.attack.clear_modifiers if self.attack != nil
+			self.defense.clear_modifiers if self.defense != nil
+
 			statuses[:modifiers].each do |m|
-				# TODO update modifiers
+				groups = m.group == (Array(m.group).include? :ALL) ? [:character, :attack, :defense] : Array(m.group)
+				self.add_modifier(m.property, m.modifier) if groups.include? :character
+				self.attack.add_modifier(m.property, m.modifier) if self.attack != nil and groups.include? :attack
+				self.defense.add_modifier(m.property, m.modifier) if self.defense != nil and groups.include? :defense
 			end
 		end
 

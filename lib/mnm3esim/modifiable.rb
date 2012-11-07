@@ -1,17 +1,16 @@
 module MnM3eSim
 
-
 	class ModifiableStructData
 
 		def self.attr_accessor_modifiable(*syms)
 			syms.each do |sym|
-				attr_name = sym.to_s
+				property = sym.to_s
 				class_eval %Q"
-					def #{attr_name}=(value)
-						@#{attr_name} = value
+					def #{property}=(value)
+						@#{property} = value
 					end
-					def #{attr_name}
-						apply_modifiers(\"#{attr_name}\", @#{attr_name})
+					def #{property}
+						apply_modifiers(\"#{property}\", @#{property})
 					end
 				"
 			end
@@ -32,13 +31,14 @@ module MnM3eSim
 			@modifiers = {}
 		end
 
-		def add_modifier(prop, mod)
-			@modifiers[prop] = [] if !@modifiers.has_key?(prop)
-			@modifiers[prop].push(mod)
+		def add_modifier(property, modifier)
+			property = property.to_sym
+			@modifiers[property] ||= []
+			@modifiers[property].push(*Array(modifier))
 		end
 
-		def delete_modifier(prop)
-			@modifiers.delete(prop)
+		def delete_modifier(property)
+			@modifiers.delete(property)
 		end
 
 		def roll_d20(bonus=0)
@@ -50,14 +50,13 @@ module MnM3eSim
 		end
 
 		protected
-		def apply_modifiers(attr_name, value)
-			attr_name = attr_name.to_sym if !(attr_name.is_a? Symbol)
-			if @modifiers.kind_of? Hash and 
-				@modifiers.has_key?(attr_name) and 
-				@modifiers[attr_name].kind_of? Array then
+		def apply_modifiers(property, value)
+			property = property.to_sym
 
-				@modifiers[attr_name].each{|mod| value = mod.call(value)}
-			end
+			Array(@modifiers[property]).concat(Array(@modifiers[:ALL])).each{|modifier| 
+				value = modifier.call(value)
+			} if @modifiers.has_key? property or @modifiers.has_key? :ALL
+
 			value
 		end
 	end
