@@ -6,16 +6,16 @@ require 'mnm3esim'
 
 include MnM3eSim
 
-#$tp = ThreadPool.new(4)
+$tp = ThreadPool.new(4)
 
 def run_sim(name, attack)
-	#$tp.schedule do
+	$tp.schedule do
 		attacker = Character.new({:name => "Atacker", :attack => attack})
 		defender = Character.new({:name => "Defender", :defense => Defense.new})
 
 		result = CombatSimulator.new({ :character1 => attacker, :character2 => defender }).run.format_stats
 		puts "==========\n#{name}\n#{result}=========="
-	#end
+	end
 end
 
 run_sim("BASIC DAMAGE", Attack::create_damage)
@@ -43,4 +43,4 @@ afflictions.each do |statuses|
 end
 
 # Wait for all threads to end
-#at_exit { $tp.shutdown }
+at_exit { $tp.shutdown }
