@@ -10,7 +10,7 @@ module MnM3eSim
 
 		def self.defaults
 			{
-			:iterations => 10000,#300000,
+			:iterations => 100000,
 			:character1 => Character.new({:attack => Attack.new, :defense => nil}),
 			:character2 => Character.new({:attack => nil, :defense => Defense.new})
 			}
